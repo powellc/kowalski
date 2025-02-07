@@ -5,12 +5,18 @@
 # ///
 #
 import os
+import re
+import logging
 import sqlite3
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
+
+INDICATOR = "$$"
+
+logger = logging.getLogger(__name__)
 # Initialize SQLite database
-conn = sqlite3.connect("message_counts.db")
+conn = sqlite3.connect("message_counts.db", check_same_thread=False)
 cursor = conn.cursor()
 
 # Create table if it doesn't exist
@@ -18,6 +24,13 @@ cursor.execute('''
     CREATE TABLE IF NOT EXISTS message_counts (
         user_id TEXT PRIMARY KEY,
         message_count INTEGER
+    )
+''')
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS messages (
+        sender_user_id TEXT PRIMARY KEY,
+        receiver_user_id TEXT,
+        message TEXT
     )
 ''')
 conn.commit()
@@ -42,16 +55,41 @@ def update_message_count(user_id):
     conn.commit()
     return new_count
 
+def record_message(sender_id, receiver_id, message):
+    cursor.execute("INSERT INTO messages (sender_user_id, receiver_user_id, message) VALUES (?, ?)", (sender_id, receiver_id, message))
+    conn.commit()
+
+
 @app.event("message")
 def handle_message_events(event, say):
-    user = event.get("user")
+    sender_id = event.get("user")
     text = event.get("text")
 
-    first_token = text.split(" ")[0]
-    second_token = text.split(" ")[1]
-    if "@" in first_token and second_token == INDICATOR:
-        user_count = update_message_count(user, text)
-        say(f"{user} has {user_count} kk's!")
+    message = None
+    mentioned_users = []
+
+    if not text:
+        log.info(f"No text? WTF? {text}")
+        return
+
+    indicator_found = len(text.split(INDICATOR)) > 1
+    try:
+        mentioned_users = re.findall(r"<@(\w+)>", text)
+        message = text.split(INDICATOR)[1]
+    except IndexError:
+        log.info("No user or text found for message: {text}")
+
+    if not indicator_found:
+        log.info("Indicator not found, ignoring")
+        return
+
+    if indicator_found:
+        user_updates = {}
+        for user_id in mentioned_users:
+            counts_per_user[user_id] = update_message_count(user_id)
+            if message:
+                record_message(sender_id, user_id, message)
+            say(f"{user_id} has {user_count} kk's!")
 
 # Start the bot
 if __name__ == "__main__":
