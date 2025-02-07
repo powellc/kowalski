@@ -23,7 +23,7 @@ cursor.execute('''
 conn.commit()
 
 # Initialize Slack app
-app = App(token=os.environ("SLACK_BOT_TOKEN"))
+app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
 
 def update_message_count(user_id):
     """Increment the message count for the user in SQLite."""
@@ -55,5 +55,5 @@ def handle_message_events(event, say):
 
 # Start the bot
 if __name__ == "__main__":
-    handler = SocketModeHandler(app, os.environ("SLACK_APP_TOKEN"))
+    handler = SocketModeHandler(app, os.environ.get("SLACK_APP_TOKEN"))
     handler.start()
