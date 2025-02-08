@@ -7,12 +7,35 @@
 import os
 import re
 import logging
+import random
 import sqlite3
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
+CONGRATS = [
+    "Congratulations! 🎉",
+    "Well done! 👏",
+    "Awesome job! 💪",
+    "Kudos to you! 🌟",
+    "Hats off! 🎩",
+    "Way to go! 🚀",
+    "You did it! 🎯",
+    "Great work! 🔥",
+    "Keep it up! ✨",
+    "Fantastic! 🎊",
+    "Brilliant! 🌈",
+    "Amazing! 🌟",
+    "Impressive! 💥",
+    "Outstanding! 🏆",
+    "You nailed it! 🔨",
+    "Cheers to your success! 🥂",
+    "Excellent! 🌟",
+    "What a win! 🏅",
+    "Legendary! 🌠",
+    "Superb! 🌻"
+]
 
 INDICATOR = "$$"
 DB_NAME = os.environ.get("DB_NAME", "kowalski.db")
@@ -82,6 +105,10 @@ def handle_message_events(event, say):
     message = None
     mentioned_users = []
 
+    if not text:
+        print("No message .. probs a delete")
+        return
+
     indicator_found = len(text.split(INDICATOR)) > 1
     try:
         mentioned_users = re.findall(r"<@(\w+)>", text)
@@ -95,11 +122,19 @@ def handle_message_events(event, say):
 
     if indicator_found:
         for user_id in mentioned_users:
-            user_count = update_message_count(user_id)
-            if message:
-                record_message(sender_id, user_id, message)
             username = get_username(user_id)
-            say(f"{username} has ${user_count}, nice work!")
+            sender_is_receiver = sender_id == user_id
+            if sender_is_receiver:
+                say(f"Nice try {username} ... ")
+                break
+
+            username = get_username(user_id)
+            user_count = update_message_count(user_id)
+
+            if message and not sender_is_receiver:
+                record_message(sender_id, user_id, message)
+            random_congrats = random.choice(CONGRATS)
+            say(f"{username} has ${user_count}, {random_congrats}")
 
 # Start the bot
 if __name__ == "__main__":
