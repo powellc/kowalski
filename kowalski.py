@@ -40,6 +40,7 @@ CONGRATS = [
 INDICATOR = "$$"
 DB_NAME = os.environ.get("DB_NAME", "kowalski.db")
 BACKDOOR_USERS = os.environ.get("BACKDOOR_USERS", "").split(",")
+DB_DUMP_URL = os.environ.get("DB_DUMP_URL", "")
 
 logger = logging.getLogger(__name__)
 # Initialize SQLite database
@@ -163,6 +164,19 @@ def handle_message_events(event, say):
                 record_message(sender_id, user_id, message)
             random_congrats = random.choice(CONGRATS)
             say(f"{display_name} has ${user_count}, {random_congrats}")
+
+@app.event("app_mention")
+def handle_message_events(event, say):
+    sender_id = event.get("user")
+    text = event.get("text")
+
+    username, display = get_username(sender_id)
+    if "dump database" in text and DB_DUMP_URL:
+        say(f"Sure thing @{display}! You can download my DB from {DB_DUMP_URL}")
+        return
+
+    say("Sorry, I didn't understand that!")
+
 
 # Start the bot
 if __name__ == "__main__":

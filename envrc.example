@@ -1,4 +1,5 @@
 export SLACK_BOT_TOKEN="xoxb-*"
 export SLACK_APP_TOKEN="xapp-*"
 export DB_NAME=""
+export DB_DUMP_URL=""
 export BACKDOOR_USERS="username,username2"
