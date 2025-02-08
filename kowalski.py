@@ -37,7 +37,7 @@ CONGRATS = [
     "Superb! 🌻",
 ]
 
-REACTIONS_TO_TRACK = [":yellow_heart:"]
+REACTIONS_TO_TRACK = ["yellow_heart"]
 INDICATOR = "^^"
 DB_NAME = os.environ.get("DB_NAME", "kowalski.db")
 BACKDOOR_USERS = os.environ.get("BACKDOOR_USERS", "").split(",")
