@@ -10,6 +10,8 @@ import logging
 import sqlite3
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 
 
 INDICATOR = "$$"
@@ -37,6 +39,17 @@ conn.commit()
 
 # Initialize Slack app
 app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
+client = WebClient(token=os.environ["SLACK_BOT_TOKEN"])
+
+def get_username(user_id):
+    try:
+        response = client.users_info(user=user_id)
+        if response.get("ok"):
+            username = response.get("user", {}).get("name")
+            return username
+    except SlackApiError as e:
+        print(f"Error fetching user info: {e.response.get('error')}")
+    return None
 
 def update_message_count(user_id):
     """Increment the message count for the user in SQLite."""
@@ -68,28 +81,24 @@ def handle_message_events(event, say):
     message = None
     mentioned_users = []
 
-    if not text:
-        log.info(f"No text? WTF? {text}")
-        return
-
     indicator_found = len(text.split(INDICATOR)) > 1
     try:
         mentioned_users = re.findall(r"<@(\w+)>", text)
         message = text.split(INDICATOR)[1]
     except IndexError:
-        log.info("No user or text found for message: {text}")
+        print("No user or text found for message: {text}")
 
     if not indicator_found:
-        log.info("Indicator not found, ignoring")
+        print("Indicator not found, ignoring")
         return
 
     if indicator_found:
-        user_updates = {}
         for user_id in mentioned_users:
-            counts_per_user[user_id] = update_message_count(user_id)
+            user_count = update_message_count(user_id)
             if message:
                 record_message(sender_id, user_id, message)
-            say(f"{user_id} has {user_count} kk's!")
+            username = get_username(user_id)
+            say(f"{username} has ${user_count}, nice work!")
 
 # Start the bot
 if __name__ == "__main__":
