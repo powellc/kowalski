@@ -143,7 +143,7 @@ def get_all_counts():
     response = "*The Loved:*\n"
     for user_id, count in rows:
         user, display = get_username(user_id)
-        response += f"- {display} has ${count}\n"
+        response += f"- {display} has {count}💖 \n"
 
     return response
 
