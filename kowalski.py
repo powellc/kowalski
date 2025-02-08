@@ -74,10 +74,13 @@ def get_username(user_id):
         response = client.users_info(user=user_id)
         if response.get("ok"):
             username = response.get("user", {}).get("name")
-            return username
+            display_name = response.get("user", {}).get("profile", {}).get("display_name")
+            if not display_name:
+                display_name = response.get("user", {}).get("profile", {}).get("real_name")
+            return username, display_name
     except SlackApiError as e:
         print(f"Error fetching user info: {e.response.get('error')}")
-    return None
+    return None, None
 
 def update_message_count(user_id):
     """Increment the message count for the user in SQLite."""
@@ -97,8 +100,8 @@ def update_message_count(user_id):
     return new_count
 
 def record_message(sender_id, receiver_id, message):
-    sender = get_username(sender_id)
-    receiver = get_username(receiver_id)
+    sender, display_name = get_username(sender_id)
+    receiver, display_name = get_username(receiver_id)
     cursor.execute("INSERT INTO messages (sender_user_id, sender_user, receiver_user_id, receiver_user, message) VALUES (?, ?, ?, ?, ?)", (sender_id, sender, receiver_id, receiver, message))
     conn.commit()
 
@@ -128,10 +131,10 @@ def handle_message_events(event, say):
 
     if indicator_found:
         for user_id in mentioned_users:
-            username = get_username(user_id)
+            username, display_name = get_username(user_id)
             sender_is_receiver = sender_id == user_id and not username in BACKDOOR_USERS
             if sender_is_receiver:
-                say(f"Nice try {username} ... ")
+                say(f"Nice try {display_name} ... ")
                 break
 
             username = get_username(user_id)
@@ -140,7 +143,7 @@ def handle_message_events(event, say):
             if message and not sender_is_receiver:
                 record_message(sender_id, user_id, message)
             random_congrats = random.choice(CONGRATS)
-            say(f"{username} has ${user_count}, {random_congrats}")
+            say(f"{display_name} has ${user_count}, {random_congrats}")
 
 # Start the bot
 if __name__ == "__main__":
