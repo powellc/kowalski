@@ -37,7 +37,7 @@ CONGRATS = [
     "Superb! 🌻",
 ]
 
-REACTION = "yellow_heart"
+REACTIONS_TO_TRACK = ["yellow_heart"]
 INDICATOR = "^^"
 DB_NAME = os.environ.get("DB_NAME", "kowalski.db")
 BACKDOOR_USERS = os.environ.get("BACKDOOR_USERS", "").split(",")
@@ -148,6 +148,11 @@ def get_all_counts():
     return response
 
 
+def get_response(display_name, user_count) -> str:
+    random_congrats = random.choice(CONGRATS)
+    return f"{display_name} has 💞{user_count}💕 -- {random_congrats}"
+
+
 @app.event("message")
 def handle_message_events(event, say):
     sender_id = event.get("user")
@@ -190,7 +195,7 @@ def handle_message_events(event, say):
             if message and not sender_is_receiver:
                 record_message(sender_id, user_id, message)
             random_congrats = random.choice(CONGRATS)
-            say(f"{display_name} has 💞{user_count}💕 -- {random_congrats}")
+            say(get_response(display_name, user_count))
 
 
 @app.event("app_mention")
@@ -204,6 +209,22 @@ def handle_message_events(event, say):
         return
 
     say("Sorry, I didn't understand that!")
+
+
+@app.event("reaction_added")
+def handle_reaction_added(event, say):
+    """Handle the reaction_added event to update message counts based on specific reactions."""
+    item_user = event.get("item_user")
+    reaction_user = event.get("user")
+    reaction_name = event.get("reaction")
+
+    if item_user and reaction_user:
+        # Ensure the bot doesn't count its own reactions
+        if item_user != reaction_user:
+            # Only update counts for certain reactions
+            if reaction_name in REACTIONS_TO_TRACK:
+                update_message_count(item_user)
+                say(get_response(display_name, user_count))
 
 
 # Start the bot
