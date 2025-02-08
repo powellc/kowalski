@@ -37,7 +37,7 @@ CONGRATS = [
     "Superb! 🌻",
 ]
 
-REACTIONS_TO_TRACK = ["yellow_heart"]
+REACTIONS_TO_TRACK = [":yellow_heart:"]
 INDICATOR = "^^"
 DB_NAME = os.environ.get("DB_NAME", "kowalski.db")
 BACKDOOR_USERS = os.environ.get("BACKDOOR_USERS", "").split(",")
@@ -214,16 +214,18 @@ def handle_message_events(event, say):
 @app.event("reaction_added")
 def handle_reaction_added(event, say):
     """Handle the reaction_added event to update message counts based on specific reactions."""
-    item_user = event.get("item_user")
-    reaction_user = event.get("user")
+    receiver_id = event.get("item_user")
+    sender_id = event.get("user")
     reaction_name = event.get("reaction")
 
-    if item_user and reaction_user:
+    if receiver_id and sender_id:
         # Ensure the bot doesn't count its own reactions
-        if item_user != reaction_user:
+        if receiver_id != sender_id:
             # Only update counts for certain reactions
+            username, display_name = get_username(receiver_id)
+            print(reaction_name, " - ", display_name)
             if reaction_name in REACTIONS_TO_TRACK:
-                update_message_count(item_user)
+                user_count = update_message_count(receiver_id)
                 say(get_response(display_name, user_count))
 
 
