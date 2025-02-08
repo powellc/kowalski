@@ -28,7 +28,8 @@ cursor.execute('''
         user_id TEXT PRIMARY KEY,
         message_count INTEGER
     )
-''') cursor.execute('''
+''') 
+cursor.execute('''
     CREATE TABLE IF NOT EXISTS messages (
         sender_user_id TEXT PRIMARY KEY,
         receiver_user_id TEXT,
