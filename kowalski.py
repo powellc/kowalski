@@ -218,12 +218,12 @@ def handle_reaction_added(event, say):
     sender_id = event.get("user")
     reaction_name = event.get("reaction")
 
+    print(reaction_name, " added by ", sender_id, " to ", receiver_id)
     if receiver_id and sender_id:
         # Ensure the bot doesn't count its own reactions
         if receiver_id != sender_id:
             # Only update counts for certain reactions
             username, display_name = get_username(receiver_id)
-            print(reaction_name, " - ", display_name)
             if reaction_name in REACTIONS_TO_TRACK:
                 user_count = update_message_count(receiver_id)
                 say(get_response(display_name, user_count))
