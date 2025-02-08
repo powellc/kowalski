@@ -39,6 +39,7 @@ CONGRATS = [
 
 INDICATOR = "$$"
 DB_NAME = os.environ.get("DB_NAME", "kowalski.db")
+BACKDOOR_USERS = os.environ.get("BACKDOOR_USERS", "").split(",")
 
 logger = logging.getLogger(__name__)
 # Initialize SQLite database
@@ -54,8 +55,11 @@ cursor.execute('''
 ''') 
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS messages (
-        sender_user_id TEXT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sender_user_id TEXT,
+        sender_user TEXT,
         receiver_user_id TEXT,
+        receiver_user TEXT,
         message TEXT
     )
 ''')
@@ -93,7 +97,9 @@ def update_message_count(user_id):
     return new_count
 
 def record_message(sender_id, receiver_id, message):
-    cursor.execute("INSERT INTO messages (sender_user_id, receiver_user_id, message) VALUES (?, ?, ?)", (sender_id, receiver_id, message))
+    sender = get_username(sender_id)
+    receiver = get_username(receiver_id)
+    cursor.execute("INSERT INTO messages (sender_user_id, sender_user, receiver_user_id, receiver_user, message) VALUES (?, ?, ?, ?, ?)", (sender_id, sender, receiver_id, receiver, message))
     conn.commit()
 
 
@@ -114,7 +120,7 @@ def handle_message_events(event, say):
         mentioned_users = re.findall(r"<@(\w+)>", text)
         message = text.split(INDICATOR)[1]
     except IndexError:
-        print("No user or text found for message: {text}")
+        print(f"No user or text found for message: {text}")
 
     if not indicator_found:
         print("Indicator not found, ignoring")
@@ -123,7 +129,7 @@ def handle_message_events(event, say):
     if indicator_found:
         for user_id in mentioned_users:
             username = get_username(user_id)
-            sender_is_receiver = sender_id == user_id
+            sender_is_receiver = sender_id == user_id and not username in BACKDOOR_USERS
             if sender_is_receiver:
                 say(f"Nice try {username} ... ")
                 break

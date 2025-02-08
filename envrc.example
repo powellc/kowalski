@@ -1,3 +1,4 @@
-SLACK_BOT_TOKEN="xoxb-*"
-SLACK_APP_TOKEN="xapp-*"
-DB_NAME="""
+export SLACK_BOT_TOKEN="xoxb-*"
+export SLACK_APP_TOKEN="xapp-*"
+export DB_NAME=""
+export BACKDOOR_USERS="username,username2"
