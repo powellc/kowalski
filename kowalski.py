@@ -172,7 +172,7 @@ def handle_message_events(event, say):
 
     username, display = get_username(sender_id)
     if "dump database" in text and DB_DUMP_URL:
-        say(f"Sure thing @{display}! You can download my DB from {DB_DUMP_URL}")
+        say(f"Sure thing {display}! You can download my DB from {DB_DUMP_URL}")
         return
 
     say("Sorry, I didn't understand that!")
