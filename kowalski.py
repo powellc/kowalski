@@ -150,7 +150,7 @@ def get_all_counts():
 
 def get_response(display_name, user_count) -> str:
     random_congrats = random.choice(CONGRATS)
-    return f"{display_name} has 💞{user_count}💕 -- {random_congrats}"
+    return f"{display_name} has {user_count} 💞💕 -- {random_congrats}"
 
 
 @app.event("message")
