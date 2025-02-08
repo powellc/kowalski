@@ -15,10 +15,11 @@ from slack_sdk.errors import SlackApiError
 
 
 INDICATOR = "$$"
+DB_NAME = os.environ.get("DB_NAME", "kowalski.db")
 
 logger = logging.getLogger(__name__)
 # Initialize SQLite database
-conn = sqlite3.connect("message_counts.db", check_same_thread=False)
+conn = sqlite3.connect(DB_NAME, check_same_thread=False)
 cursor = conn.cursor()
 
 # Create table if it doesn't exist
@@ -27,8 +28,7 @@ cursor.execute('''
         user_id TEXT PRIMARY KEY,
         message_count INTEGER
     )
-''')
-cursor.execute('''
+''') cursor.execute('''
     CREATE TABLE IF NOT EXISTS messages (
         sender_user_id TEXT PRIMARY KEY,
         receiver_user_id TEXT,
