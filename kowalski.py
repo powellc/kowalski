@@ -107,7 +107,7 @@ def record_message(sender_id, receiver_id, message):
 
 def get_all_counts():
     """Fetch all user message counts from SQLite and format them as a string."""
-    cursor.execute("SELECT user_id, message_count FROM message_counts")
+    cursor.execute("SELECT user_id, message_count FROM message_counts order by message_count desc")
     rows = cursor.fetchall()
 
     if not rows:
@@ -116,7 +116,7 @@ def get_all_counts():
     response = "*The Richest:*\n"
     for user_id, count in rows:
         user, display = get_username(user_id)
-        response += f"- <@{display}> has ${count}\n"
+        response += f"- {display} has ${count}\n"
 
     return response
 
