@@ -157,9 +157,13 @@ def get_response(display_name, user_count) -> str:
 def handle_message_events(event, say):
     sender_id = event.get("user")
     text = event.get("text")
+    item_ts = event.get("item", {}).get("ts")
+    channel_id = event.get("item", {}).get("channel")
 
     message = None
     mentioned_users = []
+    item_ts = event.get("item", {}).get("ts")
+    channel_id = event.get("item", {}).get("channel")
 
     if not text:
         print("No message .. probs a delete or an image")
@@ -167,7 +171,12 @@ def handle_message_events(event, say):
 
     if text.lower() == "how loved are we?":
         response = get_all_counts()
-        say(response)
+
+        say(
+            channel_id=channel_id,
+            text=get_all_counts(),
+            thread_ts=item_ts,
+        )
         return
 
     indicator_found = len(text.split(INDICATOR)) > 1
@@ -195,20 +204,31 @@ def handle_message_events(event, say):
             if message and not sender_is_receiver:
                 record_message(sender_id, user_id, message)
             random_congrats = random.choice(CONGRATS)
-            say(get_response(display_name, user_count))
+
+            say(
+                channel_id=channel_id,
+                text=get_response(display_name, user_count),
+                thread_ts=item_ts,
+            )
 
 
 @app.event("app_mention")
 def handle_message_events(event, say):
     sender_id = event.get("user")
     text = event.get("text")
+    item_ts = event.get("item", {}).get("ts")
+    channel_id = event.get("item", {}).get("channel")
 
     username, display = get_username(sender_id)
     if "dump database" in text and DB_DUMP_URL:
         say(f"Sure thing {display}! You can download my DB from {DB_DUMP_URL}")
         return
 
-    say("Sorry, I didn't understand that!")
+    say(
+        channel_id=channel_id,
+        text=say("Sorry, I didn't understand that!"),
+        thread_ts=item_ts,
+    )
 
 
 @app.event("reaction_added")
@@ -217,6 +237,8 @@ def handle_reaction_added(event, say):
     receiver_id = event.get("item_user")
     sender_id = event.get("user")
     reaction_name = event.get("reaction")
+    item_ts = event.get("item", {}).get("ts")
+    channel_id = event.get("item", {}).get("channel")
 
     print(reaction_name, " added by ", sender_id, " to ", receiver_id)
     if receiver_id and sender_id:
@@ -226,7 +248,11 @@ def handle_reaction_added(event, say):
             username, display_name = get_username(receiver_id)
             if reaction_name in REACTIONS_TO_TRACK:
                 user_count = update_message_count(receiver_id)
-                say(get_response(display_name, user_count))
+                say(
+                    channel_id=channel_id,
+                    text=get_response(display_name, user_count),
+                    thread_ts=item_ts,
+                )
 
 
 # Start the bot
