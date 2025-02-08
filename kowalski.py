@@ -107,7 +107,7 @@ def record_message(sender_id, receiver_id, message):
 
 def get_all_counts():
     """Fetch all user message counts from SQLite and format them as a string."""
-    cursor.execute("SELECT user_id, count FROM message_counts")
+    cursor.execute("SELECT user_id, message_count FROM message_counts")
     rows = cursor.fetchall()
 
     if not rows:
