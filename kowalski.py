@@ -105,6 +105,20 @@ def record_message(sender_id, receiver_id, message):
     cursor.execute("INSERT INTO messages (sender_user_id, sender_user, receiver_user_id, receiver_user, message) VALUES (?, ?, ?, ?, ?)", (sender_id, sender, receiver_id, receiver, message))
     conn.commit()
 
+def get_all_counts():
+    """Fetch all user message counts from SQLite and format them as a string."""
+    cursor.execute("SELECT user_id, count FROM message_counts")
+    rows = cursor.fetchall()
+
+    if not rows:
+        return "No message counts recorded yet."
+
+    response = "*The Richest:*\n"
+    for user_id, count in rows:
+        user, display = get_username(user_id)
+        response += f"- <@{display}> has ${count}\n"
+
+    return response
 
 @app.event("message")
 def handle_message_events(event, say):
@@ -116,6 +130,11 @@ def handle_message_events(event, say):
 
     if not text:
         print("No message .. probs a delete")
+        return
+
+    if text.lower() == "how rich are we?":
+        response = get_all_counts()
+        say(response)
         return
 
     indicator_found = len(text.split(INDICATOR)) > 1
