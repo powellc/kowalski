@@ -70,7 +70,7 @@ def update_message_count(user_id):
     return new_count
 
 def record_message(sender_id, receiver_id, message):
-    cursor.execute("INSERT INTO messages (sender_user_id, receiver_user_id, message) VALUES (?, ?)", (sender_id, receiver_id, message))
+    cursor.execute("INSERT INTO messages (sender_user_id, receiver_user_id, message) VALUES (?, ?, ?)", (sender_id, receiver_id, message))
     conn.commit()
 
 
