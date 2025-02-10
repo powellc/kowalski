@@ -120,6 +120,12 @@ def update_message_count(user_id):
     return new_count
 
 
+def extract_mentions(message_text: str) -> list:
+    """Extract all user mentions from a Slack message."""
+    mention_pattern = r"<@([A-Z0-9]+)>"
+    return re.findall(mention_pattern, message_text)
+
+
 def record_message(sender_id, receiver_id, message):
     sender, display_name = get_username(sender_id)
     receiver, display_name = get_username(receiver_id)
@@ -234,19 +240,32 @@ def handle_message_events(event, say):
 @app.event("reaction_added")
 def handle_reaction_added(event, say):
     """Handle the reaction_added event to update message counts based on specific reactions."""
+    text = event.get("text")
     receiver_id = event.get("item_user")
     sender_id = event.get("user")
     reaction_name = event.get("reaction")
     item_ts = event.get("item", {}).get("ts")
     channel_id = event.get("item", {}).get("channel")
 
-    print(reaction_name, " added by ", sender_id, " to ", receiver_id)
+    mentioned_user_ids = extract_mentions(text)
+
     if receiver_id and sender_id:
         # Ensure the bot doesn't count its own reactions
-        if receiver_id != sender_id:
+        if receiver_id != sender_id and reaction_name in REACTIONS_TO_TRACK:
             # Only update counts for certain reactions
-            username, display_name = get_username(receiver_id)
-            if reaction_name in REACTIONS_TO_TRACK:
+            # Update all user mentions found in the message
+            if mentioned_user_ids:
+                for user_id in mentioned_user_ids:
+                    _, display_name = get_username(user_id)
+                    user_count = update_message_count(receiver_id)
+                    say(
+                        channel_id=channel_id,
+                        text=get_response(display_name, user_count),
+                        thread_ts=item_ts,
+                    )
+            # No mentions, boost the sender who then is also the receiver
+            else:
+                _, display_name = get_username(receiver_id)
                 user_count = update_message_count(receiver_id)
                 say(
                     channel_id=channel_id,
